@@ -19,5 +19,5 @@ The solution is designed for quick SUI-node installation on Debian (10 or older)
 The solution is simple and involves just a single command executed from the **root** user.
 
 ```
-#curl -s https://raw.githubusercontent.com/mokando/ansible_sui_node/main/deploy.sh | bash
+curl -s https://raw.githubusercontent.com/mokando/ansible_sui_node/main/deploy.sh | bash
 ```
