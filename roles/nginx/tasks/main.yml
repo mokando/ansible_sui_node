@@ -136,6 +136,10 @@
       [Install]
       WantedBy=multi-user.target
 
+- name: Pause for 1 minutes - container start
+  ansible.builtin.pause:
+    minutes: 1
+
 - name: ensure nginx service started
   systemd:
     name: nginx

@@ -5,4 +5,4 @@ pip3 install ansible && \
 cd /tmp && \
 git clone https://github.com/mokando/ansible_sui_node.git && \
 cd /tmp/ansible_sui_node && \
-ansible-playbook ./playbooks/main.yml -i "127.0.0.1," -c local
+ansible-playbook ./playbooks/main.yml -i "localhost" -c local
