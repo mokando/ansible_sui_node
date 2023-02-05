@@ -71,6 +71,10 @@
     group: grafana
     mode: 0640
 
+- name: Pause for 1 minutes - container start
+  ansible.builtin.pause:
+    minutes: 1
+
 - name: Set new Grafana admin password
   uri:
     url: http://127.0.0.1/api/admin/users/1/password
