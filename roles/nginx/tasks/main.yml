@@ -129,7 +129,7 @@
       {% endif %}
         --volume /var/log/nginx:/var/log/nginx:rw \
         {{ nginx_docker_repo }}:{{ nginx_docker_image_tag }} {{ nginx_docker_cmd }}
-      ExecReload=/usr/bin/docker exec %N /opt/openresty/bin/openresty -s reload
+      ExecReload=/usr/bin/docker exec %N nginx -s reload
       Restart=always
       RestartSec=10
       KillMode=process
