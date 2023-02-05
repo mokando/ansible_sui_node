@@ -1,0 +1,31 @@
+[[servers]]
+host = "ldap.city-srv.ru"
+port = 636
+use_ssl = true
+start_tls = false
+ssl_skip_verify = true
+bind_dn = "uid=ldapauth,cn=sysaccounts,cn=etc,dc=city-srv,dc=ru"
+bind_password = '{{ ldapauth_password }}'
+search_filter = "(&(objectClass=person)(uid=%s)(!(memberof=cn=fakeusers,cn=groups,cn=accounts,dc=city-srv,dc=ru)))"
+search_base_dns = ["cn=users,cn=accounts,dc=city-srv,dc=ru"]
+group_search_base_dns = ["cn=users,cn=accounts,dc=city-srv,dc=ru"]
+
+[servers.attributes]
+name = "givenName"
+surname = "sn"
+username = "cn"
+member_of = "memberOf"
+email = "mail"
+
+[[servers.group_mappings]]
+group_dn = "cn=grafana-admins-tools,cn=groups,cn=accounts,dc=city-srv,dc=ru"
+org_role = "Admin"
+grafana_admin = true
+
+[[servers.group_mappings]]
+group_dn = "cn=grafana-editors-tools,cn=groups,cn=accounts,dc=city-srv,dc=ru"
+org_role = "Editor"
+
+[[servers.group_mappings]]
+group_dn = "*"
+org_role = "Viewer"

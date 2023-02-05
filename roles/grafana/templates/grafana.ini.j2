@@ -1,0 +1,28 @@
+{{ '# ' + ansible_managed }}
+
+## configuration references
+# https://github.com/grafana/grafana/blob/master/conf/sample.ini
+# https://grafana.com/docs/grafana/latest/administration/configuration/
+
+[database]
+type = {{ grafana_db_type }}
+host = {{ grafana_db_host }}
+name = {{ grafana_db_name }}
+user = {{ grafana_db_user }}
+{% if grafana_db_type == "postgres" %}
+# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+password = {{ postgres_users | selectattr('name', 'equalto', grafana_db_user) | map(attribute='pass') | join('') }}
+{% endif %}
+
+[server]
+# The ip address to bind to, empty will bind to all interfaces
+http_addr = {{ grafana_listen_addr }}
+http_port = {{ grafana_listen_port }}
+domain = {{ grafana_domain }}
+
+{% if grafana_setup_ldap %}
+[auth.ldap]
+enabled = true
+config_file = /etc/grafana/ldap.toml
+allow_sign_up = true
+{% endif %}

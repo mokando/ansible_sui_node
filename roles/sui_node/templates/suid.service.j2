@@ -1,0 +1,13 @@
+[Unit]
+Description=Sui Node
+After=network.target
+
+[Service]
+User=root
+Type=simple
+ExecStart=/usr/local/bin/sui-node --config-path {{ sui_db_path }}/fullnode.yaml
+Restart=on-failure
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

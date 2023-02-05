@@ -1,0 +1,27 @@
+[Unit]
+Requires=docker.service
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm --force prometheus
+ExecStart=/usr/bin/docker run \
+  --name=prometheus \
+  --rm=true \
+  --network=host \
+  --stop-timeout=60 \
+  --volume=/etc/prometheus:/etc/prometheus:ro \
+  --volume={{ prometheus_data_host_path }}:/data \
+  prom/prometheus:{{ prometheus_docker_image_tag }} \
+    --config.file=/etc/prometheus/prometheus.yml \
+    --storage.tsdb.path=/data \
+    --storage.tsdb.retention.time={{ prometheus_storage_retention_time }} \
+    --storage.tsdb.retention.size={{ prometheus_storage_retention_size }}
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=-/usr/bin/docker stop prometheus
+Restart=always
+StartLimitInterval=0
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

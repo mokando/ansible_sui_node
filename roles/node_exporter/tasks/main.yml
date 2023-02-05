@@ -1,0 +1,57 @@
+---
+- name: get services list
+  service_facts:
+
+- name: gather facts
+  setup: filter=ansible_distribution
+
+
+- name: ensure systemd node_exporter.service
+  notify: restart service node_exporter
+  copy:
+    dest: /etc/systemd/system/node_exporter.service
+    mode: 0644
+    content: |
+      [Unit]
+      Requires=docker.service
+      After=docker.service
+      [Service]
+      ExecStartPre=-/usr/bin/docker rm --force %N
+      ExecStart=/usr/bin/docker run \
+        --name=%N \
+        --rm=true \
+        --pid=host \
+        --network=host \
+        --stop-timeout=30 \
+        --label=co.elastic.logs/enabled=true \
+        --label=co.elastic.logs/format=logrus-json \
+        --volume=/:/rootfs:ro \
+        --volume={{ node_exporter_textfile_directory_path }}:{{ node_exporter_textfile_directory_path }} \
+        prom/node-exporter:{{ node_exporter_docker_image_tag }} \
+          --log.format=json \
+          --log.level=error \
+          {% for arg in node_exporter_extra_args -%}
+          {{ arg }} \
+          {% endfor -%}
+          --collector.textfile.directory={{ node_exporter_textfile_directory_path }} \
+          --collector.netdev.device-blacklist='^((vnet|veth|cali|docker).+|lo)$' \
+          --collector.diskstats.ignored-devices='^(ram|loop|fd|dm-)\\\\d+$' \
+          --collector.filesystem.mount-points-exclude='^/(run|dev|proc|sys|var/lib/docker)($|/)' \
+          --collector.filesystem.fs-types-exclude='^(rootfs|tmpfs|autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$'
+      ExecStop=-/usr/bin/docker stop %N
+      Restart=always
+      StartLimitInterval=0
+      RestartSec=10
+      KillMode=process
+      [Install]
+      WantedBy=multi-user.target
+
+- name: execute handlers
+  meta: flush_handlers
+
+- name: ensure node_exporter service is started
+  systemd:
+    name: node_exporter
+    daemon_reload: yes
+    enabled: yes
+    state: started

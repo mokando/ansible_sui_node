@@ -1,0 +1,144 @@
+- name: ensure host config dirs
+  file:
+    path: "{{ nginx_host_config_path }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+  - ssl
+  - conf.d
+
+- name: ensure host dirs
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: nobody
+    group: nogroup
+    mode: 0777
+  with_items:
+  - "{{ nginx_host_config_path }}/prometheus"
+  - /var/log/nginx
+
+- name: ensure certificates
+  notify: reload service nginx
+  copy:
+    dest: "{{ nginx_host_config_path }}/ssl/{{ item.name }}"
+    content: "{{ item.value }}"
+    owner: nobody
+    group: nogroup
+    mode: 0400
+  with_items: "{{ nginx_ssl_certs }}"
+
+- name: Generate Diffie-Hellman parameters
+  community.crypto.openssl_dhparam:
+    path: "{{ nginx_host_config_path }}/ssl/ffdhe2048.txt"
+    size: 2048
+
+- name: ensure htpasswd file
+  when: htpasswd_content is defined
+  copy:
+    dest: /etc/nginx/htpasswd
+    content: "{{ htpasswd_content }}"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: ensure nginx main config
+  notify: reload service nginx
+  copy:
+    dest: "{{ nginx_host_config_path }}/nginx.conf"
+    content: "{{ nginx_main_config | default(lookup('file', 'nginx.conf')) }}"
+    owner: root
+    group: root
+    mode: 0754
+
+- name: ensure nginx configs
+  notify: reload service nginx
+  copy:
+    dest: "{{ nginx_host_config_path }}/conf.d/{{ item.name }}"
+    content: "{{ item.value }}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items: "{{ nginx_configs }}"
+
+- name: find files in conf.d dir
+  find:
+    paths: "{{ nginx_host_config_path }}/conf.d"
+    patterns: '*.conf'
+  register: confd_existing_dir
+
+- name: get existing config names
+  set_fact:
+    confd_existing_files: "{% set list=[] %}{% for config in confd_existing_dir.files %}{{ list.append(config.path | basename) }}{% endfor %}{{ list }}"
+
+- name: get config names
+  set_fact:
+    confd_files: "{% set list=[] %}{% for config in nginx_configs %}{{ list.append(config.name) }}{% endfor %}{{ list }}"
+
+- name: remove unmanaged configs
+  file:
+    path: "{{ nginx_host_config_path }}/conf.d/{{ item }}"
+    state: absent
+  with_items: "{{ confd_existing_files }}"
+  when: item not in confd_files
+  notify: reload service nginx
+
+- name: ensure logrotate config
+  template:
+    src: nginx_logrotate.j2
+    dest: /etc/logrotate.d/nginx_logrotate
+    mode: 0644
+    owner: root
+    group: root
+
+- name: ensure systemd nginx.service
+  notify: restart service nginx
+  copy:
+    dest: /etc/systemd/system/{{ nginx_service_name }}.service
+    mode: 0644
+    content: |
+      [Unit]
+      Requires=docker.service
+      After=docker.service
+      StartLimitIntervalSec=0
+      [Service]
+      ExecStartPre=-/usr/bin/docker rm --force %N
+      ExecStart=/usr/bin/docker run \
+        --name=%N \
+        --rm=true \
+      {% if pull_setting is defined %}
+        --pull={{ pull_setting }} \
+      {% endif %}
+        --pid=host \
+        --network=host \
+        --stop-timeout=300 \
+        --label=co.elastic.logs/enabled=true \
+        --volume {{ nginx_host_config_path }}/ssl:{{ nginx_docker_config_path }}/ssl:ro \
+        --volume {{ nginx_host_config_path }}/conf.d:{{ nginx_docker_config_path }}/conf.d:ro \
+        --volume {{ nginx_host_config_path }}/nginx.conf:{{ nginx_docker_config_path }}/nginx.conf:ro \
+        --volume /var/www:/var/www \
+      {% if nginx_with_prometheus %}
+        --volume {{ nginx_host_config_path }}/prometheus:{{ nginx_docker_config_path }}/prometheus:rw \
+      {% endif %}
+      {% if nginx_additional_mountpoints is defined %}
+      {% for mountpoint in nginx_additional_mountpoints %}
+        --volume {{ mountpoint }} \
+      {% endfor %}
+      {% endif %}
+        --volume /var/log/nginx:/var/log/nginx:rw \
+        {{ nginx_docker_repo }}:{{ nginx_docker_image_tag }} {{ nginx_docker_cmd }}
+      ExecReload=/usr/bin/docker exec %N /opt/openresty/bin/openresty -s reload
+      Restart=always
+      RestartSec=10
+      KillMode=process
+      [Install]
+      WantedBy=multi-user.target
+
+- name: ensure nginx service started
+  systemd:
+    name: nginx
+    daemon_reload: yes
+    enabled: yes
+    state: started

@@ -1,0 +1,6 @@
+- name: restart suid service
+  systemd:
+    daemon_reload: yes
+    name: suid
+    enabled: yes
+    state: restarted

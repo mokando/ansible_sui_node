@@ -1,0 +1,14 @@
+---
+grafana_docker_image_tag: latest
+
+grafana_db_type: sqlite3
+grafana_db_host: 127.0.0.1:3306
+grafana_db_name: grafana
+grafana_db_user: root
+
+grafana_setup_ldap: False
+
+grafana_metrics_port: 3000
+grafana_listen_addr: 127.0.0.1
+grafana_listen_port: 3000
+grafana_domain: grafana.pt.bi.zone

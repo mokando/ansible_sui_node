@@ -1,0 +1,83 @@
+---
+- name: ensure group grafana
+  group:
+    name: grafana
+    gid: "472"
+
+- name: ensure user grafana
+  user:
+    name: grafana
+    group: "472"
+    home: /var/lib/grafana
+    uid: "472"
+
+- name: ensure work directories
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: grafana
+    group: grafana
+    mode: 0755
+  with_items:
+  - /etc/grafana
+  - /var/lib/grafana
+
+- name: Set Grafana DB
+  copy:
+    dest: "/var/lib/grafana/grafana.db"
+    content: "{{ grafana_db_file | default(lookup('file', 'grafana.db')) }}"
+    owner: grafana
+    group: root
+    mode: 0640
+
+- name: ensure grafana service
+  notify: restart service grafana
+  template:
+    src: grafana.service.j2
+    dest: /etc/systemd/system/grafana.service
+
+- name: ensure grafana main config
+  template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+  notify: restart service grafana
+
+- name: ensure grafana ldap config
+  template:
+    src: ldap.toml.j2
+    dest: /etc/grafana/ldap.toml
+  notify: restart service grafana
+  when: grafana_setup_ldap
+
+- name: execute handlers
+  meta: flush_handlers
+
+- name: start service grafana
+  systemd:
+    name: grafana
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: Generate admin password
+  set_fact:
+    grafana_pass: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters') }}"
+
+- name: Save admin password localy
+  copy:
+    content: "{{ grafana_pass }}"
+    dest: /etc/grafana/admin.pass
+    owner: root
+    group: grafana
+    mode: 0640
+
+- name: Set new Grafana admin password
+  uri:
+    url: http://127.0.0.1/api/admin/users/1/password
+    user: admin
+    password: 1Q2W3E4R5T
+    force_basic_auth: yes
+    method: PUT
+    body_format: json
+    body: '{ "password":"{{ grafana_pass }}" }'
+    return_content: true

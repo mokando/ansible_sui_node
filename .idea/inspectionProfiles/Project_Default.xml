@@ -1,0 +1,29 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myValues">
+        <value>
+          <list size="15">
+            <item index="0" class="java.lang.String" itemvalue="%}" />
+            <item index="1" class="java.lang.String" itemvalue="{%" />
+            <item index="2" class="java.lang.String" itemvalue="add_style" />
+            <item index="3" class="java.lang.String" itemvalue="if" />
+            <item index="4" class="java.lang.String" itemvalue="endif" />
+            <item index="5" class="java.lang.String" itemvalue="{{" />
+            <item index="6" class="java.lang.String" itemvalue="}}" />
+            <item index="7" class="java.lang.String" itemvalue="btn_1.additional" />
+            <item index="8" class="java.lang.String" itemvalue="btn_1.additional|safe" />
+            <item index="9" class="java.lang.String" itemvalue="btn_2.additional" />
+            <item index="10" class="java.lang.String" itemvalue="btn_2.additional|safe" />
+            <item index="11" class="java.lang.String" itemvalue="btn.additional" />
+            <item index="12" class="java.lang.String" itemvalue="btn.additional|safe" />
+            <item index="13" class="java.lang.String" itemvalue="additional" />
+            <item index="14" class="java.lang.String" itemvalue="additional|safe" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+  </profile>
+</component>

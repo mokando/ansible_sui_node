@@ -1,0 +1,8 @@
+---
+node_exporter_docker_image_tag: v1.5.0
+
+node_exporter_textfile_directory_path: /var/prometheus/textfile_exporter
+
+node_exporter_extra_args: []
+
+prom_node_exporter_job: default

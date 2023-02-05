@@ -1,0 +1,10 @@
+---
+dockerd_dropin_path: /etc/systemd/system/docker.service.d/10-docker-args.conf
+
+# https://docs.docker.com/config/containers/logging/json-file/
+dockerd_log_max_files: "1"
+dockerd_log_max_size: 1g
+
+dockerd_force_restart: no
+
+dockerd_setup_config_json: yes

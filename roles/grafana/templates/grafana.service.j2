@@ -1,0 +1,23 @@
+[Unit]
+Requires=docker.service
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm --force %N
+ExecStart=/usr/bin/docker run \
+  --name=%N \
+  --rm=true \
+  --privileged \
+  --network=host \
+  --stop-timeout=30 \
+  --volume=/etc/grafana:/etc/grafana:ro \
+  --volume=/var/lib/grafana:/var/lib/grafana:rw \
+  grafana/grafana:{{ grafana_docker_image_tag }}
+ExecStop=-/usr/bin/docker stop %N
+Restart=always
+StartLimitInterval=0
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

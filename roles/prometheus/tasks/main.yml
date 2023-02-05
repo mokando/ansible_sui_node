@@ -1,0 +1,48 @@
+---
+- name: ensure config directory
+  file:
+    state: directory
+    path: /etc/prometheus
+    owner: nobody
+    group: nogroup
+    mode: 0755
+
+- name: ensure prometheus data directory
+  file:
+    state: directory
+    path: /var/lib/prometheus
+    owner: nobody
+    group: nogroup
+    mode: 0755
+
+- name: ensure systemd service
+  notify: "restart prometheus service"
+  template:
+    src: "prometheus.service.j2"
+    dest: "/etc/systemd/system/prometheus.service"
+
+- name: check prometheus config
+  block:
+  - name: copy tmp config file
+    template:
+      src: prometheus.yml.j2
+      dest: /tmp/prometheus.yml
+  - name: check config
+    shell: docker run --entrypoint="" -v /tmp/prometheus.yml:/etc/prometheus.yml:ro prom/prometheus:latest promtool check config /etc/prometheus.yml
+    changed_when: false
+
+- name: restart service
+  notify: "restart prometheus service"
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+
+- name: execute handlers
+  meta: flush_handlers
+
+- name: ensure service started
+  systemd:
+    name: "prometheus"
+    daemon_reload: yes
+    enabled: yes
+    state: started

@@ -1,0 +1,51 @@
+- name: gather facts
+  setup: filter=ansible_distribution*
+
+- name: install packages
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg2
+    - software-properties-common
+    - python3-pip
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: install repo key
+  apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+
+- name: add repo
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+    state: present
+
+- name: install docker
+  apt:
+    name:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: ensure drop-in directory
+  file:
+    dest: /etc/systemd/system/docker.service.d
+    state: directory
+
+- name: "ensure drop-in {{ dockerd_dropin_path }}"
+  notify: restart docker daemon
+  copy:
+    dest: "{{ dockerd_dropin_path }}"
+    owner: root
+    group: root
+    mode: 0644
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/dockerd --host=fd:// --containerd=/run/containerd/containerd.sock --iptables=false --ip-forward=false --ip-masq=false --raw-logs=true --log-opt=max-file={{ dockerd_log_max_files }} --log-opt=max-size={{ dockerd_log_max_size }} --exec-opt native.cgroupdriver=systemd --experimental --metrics-addr=0.0.0.0:9323

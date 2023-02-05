@@ -1,0 +1,86 @@
+- name: install packages
+  apt:
+    name:
+    - python3
+    - tzdata
+    - libprotobuf-dev
+    - ca-certificates
+    - build-essential
+    - libssl-dev
+    - libclang-dev
+    - pkg-config
+    - openssl
+    - protobuf-compiler
+    - cmake
+    - git
+    - curl
+    - libpq-dev
+    - jq
+    - htop
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Download Installer
+  get_url:
+    url: https://sh.rustup.rs
+    dest: /tmp/sh.rustup.rs
+    mode: '0755'
+    force: 'yes'
+
+- name: install rust/cargo
+  shell: /tmp/sh.rustup.rs -y
+  args:
+    executable: /bin/bash
+
+- name: Сlone testnet source
+  ansible.builtin.git:
+    repo: https://github.com/MystenLabs/sui.git
+    dest: /tmp/sui
+    single_branch: yes
+    version: testnet
+
+- name: Ccreate {{ sui_db_path }}
+  ansible.builtin.file:
+    path: "{{ sui_db_path }}"
+    state: directory
+
+- name: Download genesis.blob
+  ansible.builtin.get_url:
+    url: https://github.com/MystenLabs/sui-genesis/raw/main/testnet/genesis.blob
+    dest: "{{ sui_db_path }}/genesis.blob"
+    mode: '0755'
+    force: 'yes'
+
+- name: Setup sui-node config
+  ansible.builtin.template:
+    src: "fullnode.yaml.j2"
+    dest: "{{ sui_db_path }}/fullnode.yaml"
+
+- name: Cargo build
+  ansible.builtin.shell:
+    cmd: source /root/.cargo/env && cargo build --release
+    chdir: /tmp/sui
+  args:
+    executable: /bin/bash
+
+- name: Copy sui-client to bin
+  ansible.builtin.copy:
+    src: /tmp/sui/target/release/sui
+    dest: /usr/local/bin/sui
+    mode: '0755'
+    remote_src: True
+
+- name: Copy sui-node to bin
+  ansible.builtin.copy:
+    src: /tmp/sui/target/release/sui-node
+    dest: /usr/local/bin/sui-node
+    mode: '0755'
+    remote_src: True
+
+- name: ensure systemd service
+  notify: "restart suid service"
+  template:
+    src: "suid.service.j2"
+    dest: "/etc/systemd/system/suid.service"
+
