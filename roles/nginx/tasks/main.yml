@@ -21,7 +21,7 @@
   - /var/log/nginx
 
 - name: ensure certificates
-  notify: reload service nginx
+  notify: restart service nginx
   copy:
     dest: "{{ nginx_host_config_path }}/ssl/{{ item.name }}"
     content: "{{ item.value }}"
@@ -45,7 +45,7 @@
     mode: 0644
 
 - name: ensure nginx main config
-  notify: reload service nginx
+  notify: restart service nginx
   copy:
     dest: "{{ nginx_host_config_path }}/nginx.conf"
     content: "{{ nginx_main_config | default(lookup('file', 'nginx.conf')) }}"
@@ -54,7 +54,7 @@
     mode: 0754
 
 - name: ensure nginx configs
-  notify: reload service nginx
+  notify: restart service nginx
   copy:
     dest: "{{ nginx_host_config_path }}/conf.d/{{ item.name }}"
     content: "{{ item.value }}"
@@ -83,7 +83,7 @@
     state: absent
   with_items: "{{ confd_existing_files }}"
   when: item not in confd_files
-  notify: reload service nginx
+  notify: restart service nginx
 
 - name: ensure logrotate config
   template:
