@@ -3,7 +3,7 @@
     name: "{{ item }}"
     daemon_reload: no
     enabled: no
-    state: stoped
+    state: stopped
   with_items:
     - grafana
     - suid
