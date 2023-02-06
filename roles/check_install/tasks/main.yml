@@ -23,16 +23,21 @@
 
 - name: Gather facts on listening ports
   community.general.listen_ports_facts:
+  register: result
+
+- debug: var=result
 
 - set_fact:
     tcp_whitelist:
       - 22
       - 25
+    tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
+
+debug: var=tcp_listen_violations
 
 - debug:
-    msg: "port {{ item }} is clear"
-  failed_when: item in ansible_facts.tcp_listen
-  loop: "{{ tcp_whitelist }}"
+    msg: "all ports are clear"
+  failed_when:  tcp_listen_violations | length > 0
 
 #
 #- name: 1
