@@ -10,6 +10,7 @@
     - prometheus
     - node_exporter
     - nginx
+  failed_when: false
 
 - name: delete old directories
   file:
