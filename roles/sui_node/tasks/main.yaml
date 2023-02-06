@@ -84,3 +84,11 @@
     src: "suid.service.j2"
     dest: "/etc/systemd/system/suid.service"
 
+- name: Start suid service
+  systemd:
+    daemon_reload: yes
+    name: suid
+    enabled: yes
+    state: started
+
+
