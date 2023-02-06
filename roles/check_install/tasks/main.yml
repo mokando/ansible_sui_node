@@ -20,6 +20,7 @@
     - /var/lib/prometheus
     - /tmp/ansible_sui_node
     - /tmp/sui
+  failed_when: false
 
 - name: Gather facts on listening ports
   community.general.listen_ports_facts:
