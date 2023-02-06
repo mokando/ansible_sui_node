@@ -18,7 +18,6 @@
   with_items:
     - /var/lib/grafana
     - /var/lib/prometheus
-    - /tmp/ansible_sui_node
     - /tmp/sui
   failed_when: false
 
