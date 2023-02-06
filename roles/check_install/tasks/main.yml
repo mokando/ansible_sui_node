@@ -25,12 +25,15 @@
   community.general.listen_ports_facts:
   register: result
 
-- debug: var=result
-
 - set_fact:
     tcp_whitelist:
-      - 22
-      - 25
+      - 9100
+      - 9090
+      - 3000
+      - 80
+      - 9000
+      - 9184
+      - 9001
 
 - set_fact:
     tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
@@ -38,20 +41,6 @@
 - debug: var=tcp_listen_violations
 
 - debug:
-    msg: "all ports are clear"
+    msg: "Needed port(s) in use"
   failed_when:  tcp_listen_violations | length > 0
 
-#
-#- name: 1
-#  msg: "sss"
-#
-#
-#- name: TCP whitelist violation
-#  ansible.builtin.debug:
-#    msg: TCP port {{ item.port }} by pid {{ item.pid }} violates the whitelist
-#  vars:
-#    tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
-#    tcp_whitelist:
-#      - 22
-#      - 25
-#  loop: "{{ tcp_listen_violations }}"
