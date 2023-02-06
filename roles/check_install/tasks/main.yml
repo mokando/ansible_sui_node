@@ -31,6 +31,8 @@
     tcp_whitelist:
       - 22
       - 25
+
+- set_fact:
     tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
 
 - debug: var=tcp_listen_violations
