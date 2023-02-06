@@ -85,3 +85,4 @@
     body_format: json
     body: '{ "password":"{{ grafana_pass }}" }'
     return_content: true
+  failed_when: false

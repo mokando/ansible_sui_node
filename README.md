@@ -21,3 +21,16 @@ The solution is simple and involves just a single command executed from the **ro
 ```
 curl -s https://raw.githubusercontent.com/mokando/ansible_sui_node/main/deploy.sh | bash
 ```
+
+<!-- PROJECT COMPONENTS -->
+## Project Components
+
+- SUI-node (main product)
+- Docker service (to run monitoring)
+- Node exporter (your server state collector)
+- Prometheus (state database)
+- Grafana (monitoring visualisation)
+- Nginx (WEB-server for HTTP access)
+
+<!-- PROJECT REQUIREMENTS -->
+## Project Requirements

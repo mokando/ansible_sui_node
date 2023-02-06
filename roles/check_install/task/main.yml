@@ -1,0 +1,50 @@
+- name: stop old services
+  systemd:
+    name: "{{ item }}"
+    daemon_reload: no
+    enabled: no
+    state: stoped
+  with_items:
+    - grafana
+    - suid
+    - prometheus
+    - node_exporter
+    - nginx
+
+- name: delete old directories
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - /var/lib/grafana
+    - /var/lib/prometheus
+    - /tmp/ansible_sui_node
+    - /tmp/sui
+
+- name: Gather facts on listening ports
+  community.general.listen_ports_facts:
+
+- set_fact:
+    tcp_whitelist:
+      - 22
+      - 25
+
+- debug:
+    msg: "port {{ item }} is clear"
+  failed_when: item in ansible_facts.tcp_listen
+  loop: "{{ tcp_whitelist }}"
+
+#
+#- name: 1
+#  msg: "sss"
+#
+#
+#- name: TCP whitelist violation
+#  ansible.builtin.debug:
+#    msg: TCP port {{ item.port }} by pid {{ item.pid }} violates the whitelist
+#  vars:
+#    tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
+#    tcp_whitelist:
+#      - 22
+#      - 25
+#  loop: "{{ tcp_listen_violations }}"
